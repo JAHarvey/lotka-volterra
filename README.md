@@ -2,7 +2,7 @@
 
 This is an interactive teaching app for two-species competition and mutualism, built for BES 550 Advanced Ecology at the University of Rhode Island. It accompanies the lecture on species interactions (competition, mutualism, and parasitism).
 
-**Open the app:** https://YOUR-USERNAME.github.io/lotka-volterra/
+**Open the app:** https://jaharvey.github.io/lotka-volterra/
 
 The first load takes 10–20 seconds because the app runs entirely in your browser.
 
