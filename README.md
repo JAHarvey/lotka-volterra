@@ -33,12 +33,14 @@ Subscript 1 or 2 refers to species 1 or species 2.
 | α × β | Product of the two interaction coefficients. For competition, αβ < 1 is needed for stable coexistence. For mutualism, αβ ≥ 1 means runaway growth. |
 | Isocline | Line in the phase plane where one species' growth is zero (dN/dt = 0). Species 1: N₁ = K₁ − αN₂. Species 2: N₂ = K₂ − βN₁. |
 | Invasion check | Whether a species can grow when rare while the other sits at its carrying capacity: K₁ > αK₂ for species 1, K₂ > βK₁ for species 2 |
+| Interaction compass | Plot of the two per-capita effects, −α and −β (Pringle 2016). The sign of each effect sets the type of interaction, and the distance from the center sets its strength. Because Lotka–Volterra subtracts α and β, positive α (competition) plots on the negative side. |
 | Parasite cost | Percentage reduction in a species' carrying capacity, a simple stand-in for the physiological cost of infection |
 
 The app shows:
 
 - **Outcome.** Exclusion, stable coexistence, a priority effect, or runaway mutualism, worked out from the invasion checks (K₁ > αK₂ and K₂ > βK₁).
 - **Phase plane.** Both isoclines, a direction field, and the simulated trajectory.
+- **Interaction compass.** The two per-capita effects (−α, −β) plotted on the layout of Pringle's (2016) interaction compass, so each parameter set can be read as mutualism, competition, exploitation, commensalism, or amensalism.
 - **Over time.** Population trajectories for both species.
 - **Parasite cost.** A slider that lowers either species' carrying capacity, a simple stand-in for the physiological cost of infection.
 
@@ -68,6 +70,8 @@ The web version is built with Shinylive:
 ## Reference
 
 Holland, J. N. & DeAngelis, D. L. (2010). A consumer–resource approach to the density-dependent population dynamics of mutualism. *Ecology* 91:1286–1295.
+
+Pringle, E. G. (2016). Orienting the interaction compass: resource availability as a major driver of context dependence. *PLoS Biology* 14:e2000891.
 
 ## Contact
 

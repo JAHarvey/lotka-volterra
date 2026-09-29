@@ -83,6 +83,24 @@ lv_outcome <- function(p) {
   list(code = "other", eq = eq, text = "Outcome is at a boundary between cases. Try nudging a parameter.")
 }
 
+# Interaction type from the signs of the effects, as on Pringle's (2016) interaction compass.
+# The effect of species 2 on species 1 is -alpha; the effect of species 1 on species 2 is -beta.
+interaction_type <- function(a, b, tol = 1e-9) {
+  s <- function(x) if (abs(x) < tol) "0" else if (-x > 0) "+" else "-"
+  key <- paste0(s(a), "/", s(b))
+  lab <- switch(key,
+    "+/+" = "Mutualism: each species benefits the other.",
+    "-/-" = "Competition: each species harms the other.",
+    "+/-" = "Exploitation (like predation or parasitism): species 1 benefits, species 2 is harmed.",
+    "-/+" = "Exploitation (like predation or parasitism): species 2 benefits, species 1 is harmed.",
+    "+/0" = "Commensalism: species 1 benefits, species 2 is unaffected.",
+    "0/+" = "Commensalism: species 2 benefits, species 1 is unaffected.",
+    "-/0" = "Amensalism: species 1 is harmed, species 2 is unaffected.",
+    "0/-" = "Amensalism: species 2 is harmed, species 1 is unaffected.",
+    "0/0" = "Neutral: neither species affects the other.")
+  list(key = gsub("-", "\u2212", key, fixed = TRUE), label = lab)
+}
+
 fmt <- function(x, d = 1) ifelse(is.na(x), "NA", formatC(x, format = "f", digits = d))
 
 # ---------------------------------------------------------------------------
@@ -146,6 +164,8 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Phase plane", plotOutput("phase", height = "460px"),
                  p(class = "stat-note", "Isoclines show where each species stops growing. Grey arrows show the direction of change; the orange path is the simulated trajectory from your starting densities.")),
+        tabPanel("Interaction compass", plotOutput("compass", height = "460px"),
+                 p(class = "stat-note", "After Pringle (2016). Each axis is the per-capita effect one species has on the other. Because Lotka-Volterra subtracts \u03b1 and \u03b2, the effect of species 2 on species 1 is \u2212\u03b1, so positive \u03b1 (competition) plots on the negative side. Points farther from the center are stronger interactions.")),
         tabPanel("Over time", plotOutput("timeplot", height = "420px")),
         tabPanel("Definitions", br(), tableOutput("defs"),
                  p(class = "stat-note", "Subscript 1 or 2 refers to species 1 or species 2.")),
@@ -190,7 +210,9 @@ server <- function(input, output, session) {
   output$outcome <- renderUI({
     o <- res(); s <- sim(); p <- pars()
     last <- tail(s$traj, 1)
+    it <- interaction_type(p$a, p$b)
     tagList(
+      p(HTML(paste0("<b>Interaction (effect on species 1 / species 2): ", it$key, "</b>. ", it$label))),
       p(class = "outcome", o$text),
       if (o$code %in% c("coexist", "priority") && all(!is.na(o$eq)) && all(o$eq > 0))
         p(HTML(paste0("Interior equilibrium: N₁* = <b>", fmt(o$eq[1]), "</b>, N₂* = <b>", fmt(o$eq[2]), "</b>",
@@ -248,6 +270,33 @@ server <- function(input, output, session) {
            col = c(navy, teal, orange), lwd = c(3, 3, 2.5), bty = "n", bg = "white")
   })
 
+  # --- Interaction compass ---
+  output$compass <- renderPlot({
+    p <- pars()
+    x <- -p$a; y <- -p$b
+    lim <- max(1.5, abs(x), abs(y)) * 1.15
+    par(mar = c(4.5, 4.5, 1.5, 1), cex = 1.05, pty = "s")
+    plot(NA, xlim = c(-lim, lim), ylim = c(-lim, lim), asp = 1,
+         xlab = expression("Effect of species 2 on species 1  (" * -alpha * ")"),
+         ylab = expression("Effect of species 1 on species 2  (" * -beta * ")"))
+    rect(0, 0, lim * 2, lim * 2, col = adjustcolor(teal, 0.10), border = NA)
+    rect(-lim * 2, -lim * 2, 0, 0, col = adjustcolor(navy, 0.08), border = NA)
+    rect(0, -lim * 2, lim * 2, 0, col = adjustcolor(orange, 0.08), border = NA)
+    rect(-lim * 2, 0, 0, lim * 2, col = adjustcolor(orange, 0.08), border = NA)
+    for (rr in seq(0.5, lim, by = 0.5))
+      symbols(0, 0, circles = rr, inches = FALSE, add = TRUE, fg = "grey85")
+    abline(h = 0, v = 0, col = "grey40", lwd = 1.5)
+    k <- lim * 0.62
+    text( k,  k, "Mutualism\n(+/+)", col = teal, font = 2)
+    text(-k, -k, "Competition\n(\u2212/\u2212)", col = navy, font = 2)
+    text( k, -k, "Exploitation\n(+/\u2212)\nsp. 1 gains", col = orange, font = 2)
+    text(-k,  k, "Exploitation\n(\u2212/+)\nsp. 2 gains", col = orange, font = 2)
+    text(lim * 0.97, 0, "Commensalism /\namensalism on axes", adj = c(1, -0.4), cex = 0.8, col = "grey30")
+    arrows(0, 0, x, y, length = 0.12, lwd = 2, col = "grey30")
+    points(x, y, pch = 21, bg = orange, col = "white", cex = 2.6, lwd = 2)
+    text(x, y, paste0("(", fmt(x, 2), ", ", fmt(y, 2), ")"), pos = 4, cex = 0.95)
+  })
+
   # --- Time series ---
   output$timeplot <- renderPlot({
     tr <- sim()$traj
@@ -265,7 +314,7 @@ server <- function(input, output, session) {
   output$defs <- renderTable(data.frame(
     Symbol = c("N₁, N₂", "t", "dN/dt", "r₁, r₂", "K₁, K₂",
                "α", "β", "N₁(0), N₂(0)", "N₁*, N₂*",
-               "α × β", "Isocline", "Invasion check", "Parasite cost"),
+               "α × β", "Isocline", "Invasion check", "Parasite cost", "Interaction compass"),
     Meaning = c(
       "Population size (number of individuals) of each species.",
       "Time, in years.",
@@ -279,7 +328,8 @@ server <- function(input, output, session) {
       "Product of the two interaction coefficients. For competition, αβ < 1 is needed for stable coexistence. For mutualism, αβ ≥ 1 means runaway growth.",
       "Line in the phase plane where one species' growth is zero (dN/dt = 0). Species 1: N₁ = K₁ − αN₂. Species 2: N₂ = K₂ − βN₁.",
       "Whether a species can grow when rare while the other sits at its carrying capacity: K₁ > αK₂ for species 1, K₂ > βK₁ for species 2.",
-      "Percentage reduction in a species' carrying capacity, a simple stand-in for the physiological cost of infection."),
+      "Percentage reduction in a species' carrying capacity, a simple stand-in for the physiological cost of infection.",
+      "Plot of the two per-capita effects, \u2212\u03b1 and \u2212\u03b2 (Pringle 2016). The sign of each effect sets the type of interaction, and the distance from the center sets its strength."),
     check.names = FALSE
   ), striped = TRUE, spacing = "s")
 
@@ -300,6 +350,7 @@ server <- function(input, output, session) {
         tags$li("Click Mutualism, then Runaway mutualism. What changed in α × β? Why don't real mutualists behave like the runaway case?")
       ),
       h4("Reference"),
+      p("Pringle, E. G. 2016. Orienting the interaction compass: resource availability as a major driver of context dependence. PLoS Biology 14:e2000891."),
       p("Holland, J. N. & DeAngelis, D. L. 2010. A consumer-resource approach to the density-dependent population dynamics of mutualism. Ecology 91:1286-1295.")
     )
   })
