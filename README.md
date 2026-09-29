@@ -15,6 +15,26 @@ dN₂/dt = r₂N₂(K₂ − N₂ − βN₁)/K₂
 
 α is the per-capita effect of species 2 on species 1, and β is the reverse. Positive values mean competition and negative values mean mutualism.
 
+## Definitions
+
+Subscript 1 or 2 refers to species 1 or species 2.
+
+| Symbol | Meaning |
+|---|---|
+| N₁, N₂ | Population size (number of individuals) of each species |
+| t | Time, in years |
+| dN/dt | Rate of change in population size per year |
+| r₁, r₂ | Intrinsic rate of increase: the per-capita growth rate when the population is small and has no competitors. It sets how fast a population changes, not who wins. |
+| K₁, K₂ | Carrying capacity: the population size each species reaches on its own, set by its own resources and self-limitation |
+| α | Per-capita effect of species 2 on species 1, in species 1 equivalents. α = 0.5 means one individual of species 2 limits species 1 as much as half an individual of species 1. |
+| β | Per-capita effect of species 1 on species 2, in species 2 equivalents. Same sign convention as α. |
+| N₁(0), N₂(0) | Starting population sizes |
+| N₁\*, N₂\* | Equilibrium population sizes, where neither population is changing |
+| α × β | Product of the two interaction coefficients. For competition, αβ < 1 is needed for stable coexistence. For mutualism, αβ ≥ 1 means runaway growth. |
+| Isocline | Line in the phase plane where one species' growth is zero (dN/dt = 0). Species 1: N₁ = K₁ − αN₂. Species 2: N₂ = K₂ − βN₁. |
+| Invasion check | Whether a species can grow when rare while the other sits at its carrying capacity: K₁ > αK₂ for species 1, K₂ > βK₁ for species 2 |
+| Parasite cost | Percentage reduction in a species' carrying capacity, a simple stand-in for the physiological cost of infection |
+
 The app shows:
 
 - **Outcome.** Exclusion, stable coexistence, a priority effect, or runaway mutualism, worked out from the invasion checks (K₁ > αK₂ and K₂ > βK₁).
