@@ -306,17 +306,3 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
-install.packages(c("shinylive", "usethis", "gitcreds"))
-usethis::create_github_token()   # opens GitHub; generate a token and copy it
-gitcreds::gitcreds_set()         # paste the token when asked
-
-
-app_dir  <- path.expand("~/COWORK/CLAUDE OUTPUTS/BES550/BES550-LotkaVolterra_App_v1")
-site_dir <- path.expand("~/Desktop/lotka-volterra")
-
-shinylive::export(app_dir, site_dir)
-file.copy(file.path(app_dir, c("app.R", "README.md")), site_dir)   # keep the source and README with it
-file.create(file.path(site_dir, ".nojekyll"))                      # stops GitHub skipping Shinylive files
-
-httpuv::runStaticServer(site_dir)   # test in your browser; press Esc in the console to stop
