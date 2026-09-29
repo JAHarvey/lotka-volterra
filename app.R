@@ -124,6 +124,13 @@ ui <- fluidPage(
       fluidRow(column(6, num("a", "α (effect of 2 on 1)", 0.6, 0.05)),
                column(6, num("b", "β (effect of 1 on 2)", 1.4, 0.05))),
       p(class = "stat-note", "Positive values = competition. Negative values = mutualism."),
+      div(class = "stat-note", style = "background:#F2F5F7; padding:8px 10px; border-radius:6px; margin-bottom:10px;",
+        HTML(paste0(
+          "<b>r</b>: intrinsic rate of increase, the per-capita growth rate when the population is small and alone. It sets how fast a population changes, not who wins.<br>",
+          "<b>K</b>: carrying capacity, the population size a species reaches on its own.<br>",
+          "<b>α</b>: per-capita effect of species 2 on species 1, in species 1 equivalents (α = 0.5: one individual of species 2 limits species 1 as much as half an individual of species 1).<br>",
+          "<b>β</b>: per-capita effect of species 1 on species 2, in species 2 equivalents.<br>",
+          "Full list in the Definitions tab."))),
 
       h4("Organismal modifier: parasite cost"),
       sliderInput("par1", "Infection lowers K₁ by (%)", min = 0, max = 90, value = 0, step = 1),
@@ -140,6 +147,8 @@ ui <- fluidPage(
         tabPanel("Phase plane", plotOutput("phase", height = "460px"),
                  p(class = "stat-note", "Isoclines show where each species stops growing. Grey arrows show the direction of change; the orange path is the simulated trajectory from your starting densities.")),
         tabPanel("Over time", plotOutput("timeplot", height = "420px")),
+        tabPanel("Definitions", br(), tableOutput("defs"),
+                 p(class = "stat-note", "Subscript 1 or 2 refers to species 1 or species 2.")),
         tabPanel("About", uiOutput("about"))
       )
     )
@@ -252,6 +261,28 @@ server <- function(input, output, session) {
            lty = c(1, 1, 3, 3), lwd = c(3, 3, 1, 1), bty = "n")
   })
 
+  # --- Definitions ---
+  output$defs <- renderTable(data.frame(
+    Symbol = c("N₁, N₂", "t", "dN/dt", "r₁, r₂", "K₁, K₂",
+               "α", "β", "N₁(0), N₂(0)", "N₁*, N₂*",
+               "α × β", "Isocline", "Invasion check", "Parasite cost"),
+    Meaning = c(
+      "Population size (number of individuals) of each species.",
+      "Time, in years.",
+      "Rate of change in population size per year.",
+      "Intrinsic rate of increase: per-capita growth rate when the population is small and has no competitors. Sets how fast a population changes, not who wins.",
+      "Carrying capacity: the population size each species reaches alone, set by its own resources and self-limitation.",
+      "Per-capita effect of species 2 on species 1, measured in species 1 equivalents. α = 0.5 means one individual of species 2 limits species 1 as much as half an individual of species 1. Positive = competition, negative = mutualism.",
+      "Per-capita effect of species 1 on species 2, measured in species 2 equivalents. Same sign convention as α.",
+      "Starting population sizes.",
+      "Equilibrium population sizes, where neither population is changing.",
+      "Product of the two interaction coefficients. For competition, αβ < 1 is needed for stable coexistence. For mutualism, αβ ≥ 1 means runaway growth.",
+      "Line in the phase plane where one species' growth is zero (dN/dt = 0). Species 1: N₁ = K₁ − αN₂. Species 2: N₂ = K₂ − βN₁.",
+      "Whether a species can grow when rare while the other sits at its carrying capacity: K₁ > αK₂ for species 1, K₂ > βK₁ for species 2.",
+      "Percentage reduction in a species' carrying capacity, a simple stand-in for the physiological cost of infection."),
+    check.names = FALSE
+  ), striped = TRUE, spacing = "s")
+
   # --- About ---
   output$about <- renderUI({
     tagList(
@@ -275,3 +306,17 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+install.packages(c("shinylive", "usethis", "gitcreds"))
+usethis::create_github_token()   # opens GitHub; generate a token and copy it
+gitcreds::gitcreds_set()         # paste the token when asked
+
+
+app_dir  <- path.expand("~/COWORK/CLAUDE OUTPUTS/BES550/BES550-LotkaVolterra_App_v1")
+site_dir <- path.expand("~/Desktop/lotka-volterra")
+
+shinylive::export(app_dir, site_dir)
+file.copy(file.path(app_dir, c("app.R", "README.md")), site_dir)   # keep the source and README with it
+file.create(file.path(site_dir, ".nojekyll"))                      # stops GitHub skipping Shinylive files
+
+httpuv::runStaticServer(site_dir)   # test in your browser; press Esc in the console to stop
